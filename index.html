@@ -873,7 +873,7 @@ window.addEventListener('beforeunload', () => {
   if (currentUser) { try{ navigator.sendBeacon && navigator.sendBeacon(GAS_URL+'?action=logEvent&token='+encodeURIComponent(sessionToken||'')+'&eventType=Logout&details=Tab%20closed'); }catch(e){} }
 });
 let _loadStartTs = null;
-const LOAD_MIN_MS = 6500; // keeps the logo animation on screen ~5-10s even on fast connections
+const LOAD_MIN_MS = 2500; // keeps the logo animation on screen ~5-10s even on fast connections
 function hideSplash(){
   const elapsed = Date.now() - (_loadStartTs || Date.now());
   const wait = Math.max(0, LOAD_MIN_MS - elapsed);
