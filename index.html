@@ -638,11 +638,11 @@ let sessionToken   = null; // server-verified session token, issued at login (v6
 let allAgents       = [];
 let mgmtUsers       = [];
 let placeholderLinks = [];
-let userSettings     = { theme:'alloco', notifications:true, notificationTone:'chime', clickTone:'soft', hasProfilePic:false };
+let userSettings     = { theme:'futuristic', notifications:true, notificationTone:'chime', clickTone:'soft', hasProfilePic:false };
 let profilePicCache   = {}; // email -> base64 data URL
 let pendingEmail = '', otpMode = 'forgot', _signupPass = '', _verifiedOtp = '';
 let adminMonthIdx = 0, tlMonthIdx = 0, adminBreakdownMonthIdx = 0, adminOverviewMonthIdx = -1, tlOverviewMonthIdx = -1;
-let currentTheme = 'alloco';
+let currentTheme = 'futuristic';
 let chartInstances = {};
 let currentPage = 'dash';
 
@@ -661,7 +661,7 @@ function getActiveMetrics(id){ if(!chartMetricState[id]) chartMetricState[id]=ne
 function setTheme(theme, skipSave) {
   currentTheme = theme;
   document.documentElement.setAttribute('data-theme', theme);
-  ['futuristic','clean','flatdark','alloco'].forEach(t=>{
+  ['futuristic','clean','flatdark'].forEach(t=>{
     const b=document.getElementById('theme-btn-'+t);
     if (b) b.classList.toggle('active', t===theme);
   });
@@ -860,7 +860,7 @@ function logEvent(eventType, details) {
 // ═════════════════════════════════════════════════════════════════
 window.addEventListener('load', async () => {
   _loadStartTs = Date.now();
-  document.documentElement.setAttribute('data-theme','alloco');
+  document.documentElement.setAttribute('data-theme','futuristic');
   initOtpBoxes(); initParticles(); startClocks();
   const savedUser = sessionStorage.getItem('reac_user');
   const savedToken = sessionStorage.getItem('reac_token');
@@ -1086,7 +1086,7 @@ async function loadDashboard() {
   // Make sure our own picture is present/fresh even if the bulk call failed.
   if (picRes.status==='fulfilled' && picRes.value.success && picRes.value.image) profilePicCache[currentUser.email] = picRes.value.image;
 
-  setTheme(userSettings.theme||'alloco', true);
+  setTheme(userSettings.theme||'futuristic', true);
   hideSplash();
   const role = currentUser.role;
   currentPage = 'dash';
@@ -1679,9 +1679,6 @@ function renderSettingsPage() {
     <div class="panel" style="margin-bottom:1.5rem">
       <div class="panel-title">Appearance — Theme</div>
       <div class="theme-picker">
-        <div class="theme-card ${currentTheme==='alloco'?'selected':''}" onclick="selectThemeCard('alloco')">
-          <div class="theme-swatch"><span style="background:#0a0a0b"></span><span style="background:#cbb26a"></span><span style="background:#17171a"></span></div>
-          <div class="theme-card-label">◆ Minimal (Alloco)</div></div>
         <div class="theme-card ${currentTheme==='futuristic'?'selected':''}" onclick="selectThemeCard('futuristic')">
           <div class="theme-swatch"><span style="background:#050a12"></span><span style="background:#00ffe7"></span><span style="background:#0d1826"></span></div>
           <div class="theme-card-label">⬡ Neon Futuristic</div></div>
