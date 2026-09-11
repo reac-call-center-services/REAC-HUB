@@ -369,6 +369,8 @@ body { background:var(--bg); color:var(--text); font-family:var(--font-body); fo
 .quicklinks-btn { display:flex; align-items:center; gap:6px; height:32px; padding:0 12px; background:var(--bg3); border:1px solid var(--border2); border-radius:20px; color:var(--text2); font-family:var(--font-mono); font-size:10px; letter-spacing:.08em; cursor:pointer; transition:.2s; white-space:nowrap; }
 .quicklinks-btn:hover { border-color:var(--neon); color:var(--neon); }
 .quicklinks-btn svg { width:12px; height:12px; }
+.quicklinks-btn:disabled { opacity:.5; cursor:not-allowed; }
+.refresh-spin { animation: spin .8s linear infinite; }
 .quicklinks-menu { position:absolute; top:calc(100% + 8px); right:0; width:250px; max-height:340px; overflow-y:auto; background:var(--sidebar-bg); border:1px solid var(--sidebar-border); border-radius:var(--card-radius); box-shadow:0 12px 40px rgba(0,0,0,.4); padding:8px; display:none; z-index:150; }
 .quicklinks-menu.open { display:block; }
 .ql-item { display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:8px; cursor:pointer; color:var(--text); font-size:12.5px; transition:.15s; }
@@ -528,7 +530,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--font-body); fo
     </div>
     <button class="btn-primary" id="otp-btn" onclick="doVerifyOtp()"><span>⬡ VERIFY CODE</span></button>
     <button class="btn-ghost" id="otp-resend-btn" onclick="doResendOtp()">Resend Code</button>
-    <button class="btn-ghost" onclick="show('s-login')">← Back to login</button>
+    <button class="btn-ghost" onclick="backFromAuthFlow()">← Back</button>
   </div>
 </div>
 
@@ -569,7 +571,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--font-body); fo
       </div>
     </div>
     <button class="btn-primary" id="newpass-btn" onclick="doSetNewPassword()"><span>⬡ SET PASSWORD</span></button>
-    <button class="btn-ghost" onclick="show('s-login')">← Back to login</button>
+    <button class="btn-ghost" onclick="backFromAuthFlow()">← Back</button>
   </div>
 </div>
 
@@ -601,6 +603,10 @@ body { background:var(--bg); color:var(--text); font-family:var(--font-body); fo
       <div class="topbar">
         <div class="topbar-title" id="app-topbar-title">Dashboard</div>
         <div class="topbar-right">
+          <button class="quicklinks-btn" id="refresh-data-btn" onclick="doRefreshData()" title="Refresh all data from the server">
+            <svg id="refresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+            REFRESH
+          </button>
           <div class="quicklinks-dropdown" id="quicklinks-dropdown">
             <button class="quicklinks-btn" onclick="toggleQuickLinksMenu(event)">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
@@ -645,6 +651,7 @@ let adminMonthIdx = 0, tlMonthIdx = 0, adminBreakdownMonthIdx = 0, adminOverview
 let currentTheme = 'futuristic';
 let chartInstances = {};
 let currentPage = 'dash';
+let isRefreshingData = false;
 
 const METRICS = [
   { key:'tps', label:'TPS', color:'#378ADD' },
@@ -826,6 +833,48 @@ function openPlaceholder(label, url) {
   else toast('No URL configured for "'+label+'" yet — ask your admin to add it in the Place Holder sheet.');
 }
 
+// ═════════════════════════════════════════════════════════════════
+//  REFRESH DATA (topbar button beside Quick Links)
+// ═════════════════════════════════════════════════════════════════
+async function doRefreshData() {
+  if (isRefreshingData || !currentUser) return;
+  isRefreshingData = true;
+  const btn = document.getElementById('refresh-data-btn');
+  const icon = document.getElementById('refresh-icon');
+  if (btn) btn.disabled = true;
+  if (icon) icon.classList.add('refresh-spin');
+  try {
+    const [dataRes, phRes, allPicsRes] = await Promise.allSettled([
+      gasGet('getData'),
+      gasGet('getPlaceholders'),
+      gasGet('getAllProfilePics')
+    ]);
+
+    if (dataRes.status==='fulfilled' && dataRes.value && dataRes.value.success === false) {
+      toast(dataRes.value.message || 'Session expired. Please log in again.');
+      doLogout();
+      return;
+    }
+
+    if (dataRes.status==='fulfilled') { allAgents = dataRes.value.agents||[]; mgmtUsers = dataRes.value.management||[]; }
+    if (phRes.status==='fulfilled') { placeholderLinks = phRes.value.items||[]; buildQuickLinksMenu(); }
+    if (allPicsRes.status==='fulfilled' && allPicsRes.value.success && allPicsRes.value.images) {
+      Object.assign(profilePicCache, allPicsRes.value.images);
+    }
+
+    setupUserChip();
+    renderCurrentPage();
+    logEvent('Data Refresh', 'Manually refreshed dashboard data');
+    toast('Data refreshed — scores are up to date.');
+  } catch(e) {
+    toast('Refresh failed: ' + e.message);
+  } finally {
+    isRefreshingData = false;
+    if (btn) btn.disabled = false;
+    if (icon) icon.classList.remove('refresh-spin');
+  }
+}
+
 function navigateTo(page) {
   currentPage = page;
   document.querySelectorAll('#sidebar-nav .nav-item[data-page]').forEach(n=>n.classList.toggle('active', n.dataset.page===page));
@@ -860,7 +909,8 @@ function logEvent(eventType, details) {
 // ═════════════════════════════════════════════════════════════════
 window.addEventListener('load', async () => {
   _loadStartTs = Date.now();
-  document.documentElement.setAttribute('data-theme','futuristic');
+  document.documentElement.setAttribute('data-theme','flatdark');
+  currentTheme = 'flatdark';
   initOtpBoxes(); initParticles(); startClocks();
   const savedUser = sessionStorage.getItem('reac_user');
   const savedToken = sessionStorage.getItem('reac_token');
@@ -986,6 +1036,8 @@ async function doVerifyOtp() {
       if (finalRes.success) { toast('Account created successfully!'); show('s-login'); setTimeout(()=>showOk('login-ok','✓ Account created! You can now sign in.'),200); }
       else showErr('otp-err', finalRes.message||'Failed to create account.');
     } else {
+      // Handles both 'forgot' (from login page) and 'changepass' (from Settings) —
+      // both simply proceed to the New Password screen once the OTP checks out.
       _verifiedOtp = code;
       ['new-pass','new-pass2'].forEach(id=>{const el=document.getElementById(id); if(el) el.value='';});
       const sf=document.getElementById('new-strength-fill'); if(sf) sf.style.width='0%';
@@ -1002,14 +1054,67 @@ async function doSetNewPassword() {
   if (!/[0-9]/.test(password)) { showErr('newpass-err','Password needs at least one number.'); return; }
   if (!/[^A-Za-z0-9]/.test(password)) { showErr('newpass-err','Password needs at least one special character.'); return; }
   if (password!==p2) { showErr('newpass-err','Passwords do not match.'); return; }
-  if (!_verifiedOtp||!pendingEmail) { showErr('newpass-err','Session expired. Please start over from Forgot Password.'); return; }
+  const isChangePass = otpMode==='changepass';
+  if (!_verifiedOtp||!pendingEmail) { showErr('newpass-err','Session expired. Please start over from '+(isChangePass?'Settings.':'Forgot Password.')); return; }
   setBtnLoading('newpass-btn', true);
   try {
     const res = await gasGet('verifyOtpAndSetPassword', { email:pendingEmail, otp:_verifiedOtp, password, mode:'reset' });
-    if (res.success) { _verifiedOtp=''; pendingEmail=''; toast('Password updated successfully!'); show('s-login'); setTimeout(()=>showOk('login-ok','✓ Password updated! You can now sign in.'),200); }
-    else { showErr('newpass-err', res.message||'Failed to update password.'); if ((res.message||'').toLowerCase().includes('expired')) { _verifiedOtp=''; setTimeout(()=>show('s-forgot'),3000); } }
+    if (res.success) {
+      _verifiedOtp=''; pendingEmail='';
+      toast('Password updated successfully!');
+      if (isChangePass) {
+        otpMode = 'forgot';
+        show('s-app');
+        navigateTo('settings');
+      } else {
+        show('s-login');
+        setTimeout(()=>showOk('login-ok','✓ Password updated! You can now sign in.'),200);
+      }
+    }
+    else {
+      showErr('newpass-err', res.message||'Failed to update password.');
+      if ((res.message||'').toLowerCase().includes('expired')) {
+        _verifiedOtp='';
+        setTimeout(()=>{
+          if (isChangePass) { otpMode='forgot'; show('s-app'); navigateTo('settings'); }
+          else show('s-forgot');
+        },3000);
+      }
+    }
   } catch(e) { showErr('newpass-err','Connection error: '+e.message); }
   setBtnLoading('newpass-btn', false);
+}
+// Shared "back" handler for the OTP and New Password screens, which are used
+// both by the pre-login Forgot Password flow and the in-app Change Password
+// flow (Settings). Routes back to whichever place the flow was started from.
+function backFromAuthFlow(){
+  if (otpMode==='changepass' && currentUser) {
+    pendingEmail=''; _verifiedOtp=''; otpMode='forgot';
+    show('s-app');
+    navigateTo('settings');
+  } else {
+    show('s-login');
+  }
+}
+// Triggered from the Settings page "Change Password" button. Reuses the
+// same OTP + New Password screens as the login page's Forgot Password flow,
+// but sends the code straight to the already-authenticated user's own email
+// (no need to re-check that the email exists — they're already logged in).
+async function doChangePasswordRequest() {
+  if (!currentUser) return;
+  setBtnLoading('settings-changepass-btn', true);
+  try {
+    const res = await gasGet('sendOtp', { email: currentUser.email });
+    if (res.success) {
+      pendingEmail = currentUser.email;
+      otpMode = 'changepass';
+      setupOtpScreen(currentUser.email);
+      show('s-otp');
+    } else {
+      toast(res.message || 'Failed to send verification code. Try again.');
+    }
+  } catch(e) { toast('Connection error: '+e.message); }
+  setBtnLoading('settings-changepass-btn', false);
 }
 function checkPassRules(prefix) {
   const inputId = prefix==='signup'?'signup-pass':'new-pass';
@@ -1045,9 +1150,11 @@ function setBtnLoading(id,on){ const btn=document.getElementById(id); if(!btn) r
 function doLogout() {
   logEvent('Logout', 'Signed out of REAC Hub');
   gasGet('logout', {}).catch(()=>{}); // invalidate the server-side session immediately
-  currentUser=null; sessionToken=null; _verifiedOtp=''; _signupPass=''; pendingEmail='';
+  currentUser=null; sessionToken=null; _verifiedOtp=''; _signupPass=''; pendingEmail=''; otpMode='forgot';
   sessionStorage.removeItem('reac_user');
   sessionStorage.removeItem('reac_token');
+  document.documentElement.setAttribute('data-theme','flatdark');
+  currentTheme = 'flatdark';
   show('s-login');
 }
 
@@ -1692,6 +1799,14 @@ function renderSettingsPage() {
     </div>
 
     <div class="panel" style="margin-bottom:1.5rem">
+      <div class="panel-title">Security</div>
+      <div class="settings-row">
+        <div><div class="settings-row-label">Password</div><div class="settings-row-sub">Change your account password. We'll email a one-time verification code to confirm it's you — same as the login page's "Forgot password" flow.</div></div>
+        <button class="btn-primary" id="settings-changepass-btn" style="width:auto;height:38px;padding:0 18px;margin-top:0" onclick="doChangePasswordRequest()"><span>⬡ CHANGE PASSWORD</span></button>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-bottom:1.5rem">
       <div class="panel-title">Notifications</div>
       <div class="settings-row"><div><div class="settings-row-label">Enable notifications</div><div class="settings-row-sub">Toast alerts for system events</div></div>
         <label class="toggle-switch"><input type="checkbox" id="set-notif-toggle" ${userSettings.notifications?'checked':''} onchange="onSettingsChange()"/><span class="toggle-slider"></span></label></div>
@@ -1791,8 +1906,8 @@ function renderHelpPage() {
     <div class="page-header"><div class="page-tag">// SUPPORT</div><h1>Help</h1><p>Quick answers and where to go for more.</p></div>
     <div class="panel" style="margin-bottom:1.5rem"><div class="panel-title">Frequently Asked</div>
       <div style="display:flex;flex-direction:column;gap:14px">
-        <div><div style="font-weight:600;font-size:13px;margin-bottom:4px">My scores look outdated — what do I do?</div><div style="font-size:12px;color:var(--text2)">Scores are pulled directly from the monthly sheet your admin updates. If a period looks missing, check with your Team Lead.</div></div>
-        <div><div style="font-weight:600;font-size:13px;margin-bottom:4px">How do I change my password?</div><div style="font-size:12px;color:var(--text2)">Log out, then choose "Forgot password?" on the login screen to reset via a one-time code sent to your email.</div></div>
+        <div><div style="font-weight:600;font-size:13px;margin-bottom:4px">My scores look outdated — what do I do?</div><div style="font-size:12px;color:var(--text2)">Scores are pulled directly from the monthly sheet your admin updates. If a period looks missing, check with your Team Lead — or tap the REFRESH button in the top bar to pull the latest data immediately.</div></div>
+        <div><div style="font-weight:600;font-size:13px;margin-bottom:4px">How do I change my password?</div><div style="font-size:12px;color:var(--text2)">While logged in, go to Settings → Security → Change Password to reset it via a one-time code sent to your email. You can also log out and choose "Forgot password?" on the login screen.</div></div>
         <div><div style="font-weight:600;font-size:13px;margin-bottom:4px">Can I use the portal on mobile?</div><div style="font-size:12px;color:var(--text2)">Yes — the layout adapts to smaller screens; use the arrow tab on the left edge to collapse the sidebar.</div></div>
       </div></div>
     <div class="panel"><div class="panel-title">Need more help?</div>
