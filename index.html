@@ -1544,15 +1544,16 @@ function renderTlScores() {
   const canvasId='chart-tl-scores';
   ca.innerHTML = `<div class="page-section">
     <div class="page-header"><div class="page-tag" style="color:#378ADD;border-color:rgba(55,138,221,.3)">// TEAM SCORES</div><h1>Team Scores</h1><p>Month-by-month breakdown for your team.</p></div>
-    <div class="panel" style="margin-bottom:1.5rem"><div class="panel-title" style="color:#378ADD">Team Trend — All Months</div>${metricTogglesHTML(canvasId)}<canvas id="${canvasId}" height="130"></canvas></div>
-    <div class="panel"><div class="panel-title" style="color:#378ADD">Monthly Records</div><div class="month-tabs" id="tl-month-tabs"></div>
-      <div style="overflow-x:auto"><table class="data-table"><thead><tr id="tl-scores-thead"></tr></thead><tbody id="tl-scores-tbody"></tbody></table></div></div></div>`;
-  renderTlMonthTabs(months); renderTlTable(candidates, tlMonthIdx);
+    <div class="panel" style="margin-bottom:1.5rem"><div class="panel-title-row"><div class="panel-title" style="color:#378ADD">Monthly Records</div>
+      <select class="select-ctrl" id="tl-month-select" onchange="tlMonthSwitch(this.value)"></select></div>
+      <div style="overflow-x:auto"><table class="data-table"><thead><tr id="tl-scores-thead"></tr></thead><tbody id="tl-scores-tbody"></tbody></table></div></div>
+    <div class="panel"><div class="panel-title" style="color:#378ADD">Team Trend — All Months</div>${metricTogglesHTML(canvasId)}<canvas id="${canvasId}" height="130"></canvas></div></div>`;
+  renderTlMonthSelect(months); renderTlTable(candidates, tlMonthIdx);
   setTimeout(()=>buildLineChart(canvasId, candidates, currentUser.email), 60);
 }
-function renderTlMonthTabs(months) { const el=document.getElementById('tl-month-tabs'); if(!el) return;
-  el.innerHTML = months.map((m,i)=>`<button class="month-tab${i===tlMonthIdx?' active':''}" onclick="tlMonthSwitch(${i})">${m.label}</button>`).join(''); }
-function tlMonthSwitch(idx){ tlMonthIdx=idx; const candidates=getTeamCandidates(currentUser.email); renderTlMonthTabs(allAgents[0]?.months||[]); renderTlTable(candidates, idx); }
+function renderTlMonthSelect(months) { const el=document.getElementById('tl-month-select'); if(!el) return;
+  el.innerHTML = months.map((m,i)=>`<option value="${i}"${i===tlMonthIdx?' selected':''}>${m.label}</option>`).join(''); }
+function tlMonthSwitch(idx){ tlMonthIdx=parseInt(idx); const candidates=getTeamCandidates(currentUser.email); renderTlMonthSelect(allAgents[0]?.months||[]); renderTlTable(candidates, tlMonthIdx); }
 function renderTlTable(candidates, monthIdx) {
   const thead=document.getElementById('tl-scores-thead'), tbody=document.getElementById('tl-scores-tbody'); if(!thead||!tbody) return;
   thead.innerHTML='<th>Rank</th><th>Agent</th><th>Count</th><th>TPS</th><th>Attendance</th><th>QA Score</th><th>Overall</th>';
@@ -1763,13 +1764,14 @@ function renderTlOverview() {
       <div class="metric-card" style="--card-color:var(--warn)"><div class="metric-label">Avg QA Score</div><div class="metric-value">${avgQa?avgQa.toFixed(1)+'%':'—'}</div><div class="metric-sub">${selLabel}</div></div>
       <div class="metric-card" style="--card-color:var(--neon)"><div class="metric-label">Avg Overall</div><div class="metric-value">${avgOv?avgOv.toFixed(1)+'%':'—'}</div><div class="metric-sub">${selLabel}</div></div>
     </div>
-    <div class="panel" style="margin-bottom:1.5rem"><div class="panel-title" style="color:#378ADD">Team Performance Trend</div>${metricTogglesHTML(canvasId)}<canvas id="${canvasId}" height="130"></canvas></div>
-    <div class="panel"><div class="panel-title" style="color:#378ADD">Team Rankings — ${selLabel}</div><div style="overflow-x:auto"><table class="data-table">
+    <div class="panel" style="margin-bottom:1.5rem"><div class="panel-title" style="color:#378ADD">Team Rankings — ${selLabel}</div><div style="overflow-x:auto"><table class="data-table">
       <thead><tr><th>Rank</th><th>Agent</th><th>TPS</th><th>Attendance</th><th>QA</th><th>Overall</th></tr></thead><tbody>
         ${sorted.map(a=>{ const m=a.months[selIdx]; return `<tr><td>${rankBadgeHTML(m.rank)}</td><td><div class="agent-cell">${avatarHTML(a,28)}<span class="agent-cell-name">${a.name}</span></div></td>
           <td>${fmtPct(m.tps)}</td><td>${fmtPct(m.attendance)}</td><td>${fmtPct(m.qa)}</td><td>${scoreBarHTML(m.overall)}</td></tr>`; }).join('')}
         ${myTeam.filter(a=>{const m=a.months?.[selIdx]; return !m||!m.count||m.overall==='Attrite';}).map(a=>`<tr><td>—</td><td>${a.name}</td><td colspan="4"><span class="attrite-badge">${a.months?.[selIdx]?.overall==='Attrite'?'Attrited':'No Data'}</span></td></tr>`).join('')}
-      </tbody></table></div></div></div>`;
+      </tbody></table></div></div>
+    <div class="panel"><div class="panel-title" style="color:#378ADD">Team Performance Trend</div>${metricTogglesHTML(canvasId)}<canvas id="${canvasId}" height="130"></canvas></div>
+  </div>`;
   setTimeout(()=>buildLineChart(canvasId, candidates, tlEmail), 60);
 }
 function tlOverviewMonthSwitch(idx) { tlOverviewMonthIdx = parseInt(idx); renderTlOverview(); }
@@ -1906,7 +1908,7 @@ function renderHelpPage() {
     <div class="page-header"><div class="page-tag">// SUPPORT</div><h1>Help</h1><p>Quick answers and where to go for more.</p></div>
     <div class="panel" style="margin-bottom:1.5rem"><div class="panel-title">Frequently Asked</div>
       <div style="display:flex;flex-direction:column;gap:14px">
-        <div><div style="font-weight:600;font-size:13px;margin-bottom:4px">What is my Line of Business?</div><div style="font-size:12px;color:var(--text2)">Your Line of Business (LOB) is initially determined by the job role outlined in your signed offer. However, if there are task transitions within the operation, your primary responsibilities or current major role will define your active Line of Business. This will also consider which tasks carry the greater level of responsibility and, when applicable, the role identified or designated by the Team Lead based on the agent’s current responsibilities.
+        <div><div style="font-weight:600;font-size:13px;margin-bottom:4px">What is my Line of Business?</div><div style="font-size:12px;color:var(--text2)">Your Line of Business (LOB) is initially determined by the job role outlined in your signed offer. However, if there are task transitions within the operation, your primary responsibilities or current major role will define your active Line of Business. This will also consider which tasks carry the greater level of responsibility and, when applicable, the role identified or designated by the Team Lead based on the agent's current responsibilities.
 </div></div>
         <div><div style="font-weight:600;font-size:13px;margin-bottom:4px">My scores look outdated — what do I do?</div><div style="font-size:12px;color:var(--text2)">Scores are pulled directly from the monthly sheet your admin updates. If a period looks missing, check with your Team Lead — or tap the REFRESH button in the top bar to pull the latest data immediately.</div></div>
         <div><div style="font-weight:600;font-size:13px;margin-bottom:4px">Can I use the portal on mobile?</div><div style="font-size:12px;color:var(--text2)">Yes — the layout adapts to smaller screens; use the arrow tab on the left edge to collapse the sidebar.</div></div>
