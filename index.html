@@ -424,7 +424,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--font-body); fo
   <div class="auth-bg-glow"></div>
   <div class="auth-logo">
     <div class="logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
-    <h1>REAC HUB</h1><p>Performance Portal</p>
+    <h1>REAC HUB</h1><p>Portal</p>
   </div>
   <div class="auth-card">
     <h2>Access Terminal</h2>
@@ -1710,7 +1710,7 @@ async function renderActivityLog() {
   // Only Admin/Master Admin can see activity for every user in the system.
   // (Server enforces this by resolving email/role from the verified session —
   // see actionGetActivity in Code.gs v6.4 — not from anything sent here.)
-  const scopeCopy = role==='admin' ? 'Login, logout, and activity for every user in the system.' : 'Your own login, logout, and activity history.';
+  const scopeCopy = role==='admin' ? 'Login, logout, and activity for every user in the system.' : 'History';
   const scopeTag = role==='admin' ? 'ALL USERS' : 'MY ACTIVITY';
   ca.innerHTML = `<div class="page-section"><div class="page-header"><div class="page-tag">// ${scopeTag}</div><h1>Activity Log</h1><p>${scopeCopy}</p></div>
     <div class="panel"><div class="panel-title">Recent Events</div><div id="activity-log-body" style="overflow-x:auto"><div class="no-data"><div class="nd-icon">⏳</div>Loading…</div></div></div></div>`;
@@ -1781,7 +1781,7 @@ function renderSettingsPage() {
   const ca = document.getElementById('app-content-area');
   const pic = profilePicCache[currentUser.email];
   ca.innerHTML = `<div class="page-section">
-    <div class="page-header"><div class="page-tag">// ACCOUNT</div><h1>Settings</h1><p>Personalize your portal — theme, sounds, and profile photo.</p></div>
+    <div class="page-header"><div class="page-tag">// ACCOUNT</div><h1>Settings</h1><p>Personalize your portal.</p></div>
 
     <div class="panel" style="margin-bottom:1.5rem">
       <div class="panel-title">Appearance — Theme</div>
@@ -1906,12 +1906,13 @@ function renderHelpPage() {
     <div class="page-header"><div class="page-tag">// SUPPORT</div><h1>Help</h1><p>Quick answers and where to go for more.</p></div>
     <div class="panel" style="margin-bottom:1.5rem"><div class="panel-title">Frequently Asked</div>
       <div style="display:flex;flex-direction:column;gap:14px">
+        <div><div style="font-weight:600;font-size:13px;margin-bottom:4px">What is my Line of Business?</div><div style="font-size:12px;color:var(--text2)">Your Line of Business (LOB) is initially determined by the job role outlined in your signed offer. However, if there are task transitions within the operation, your primary responsibilities or current major role will define your active Line of Business. This will also consider which tasks carry the greater level of responsibility and, when applicable, the role identified or designated by the Team Lead based on the agent’s current responsibilities.
+</div></div>
         <div><div style="font-weight:600;font-size:13px;margin-bottom:4px">My scores look outdated — what do I do?</div><div style="font-size:12px;color:var(--text2)">Scores are pulled directly from the monthly sheet your admin updates. If a period looks missing, check with your Team Lead — or tap the REFRESH button in the top bar to pull the latest data immediately.</div></div>
-        <div><div style="font-weight:600;font-size:13px;margin-bottom:4px">How do I change my password?</div><div style="font-size:12px;color:var(--text2)">While logged in, go to Settings → Security → Change Password to reset it via a one-time code sent to your email. You can also log out and choose "Forgot password?" on the login screen.</div></div>
         <div><div style="font-weight:600;font-size:13px;margin-bottom:4px">Can I use the portal on mobile?</div><div style="font-size:12px;color:var(--text2)">Yes — the layout adapts to smaller screens; use the arrow tab on the left edge to collapse the sidebar.</div></div>
       </div></div>
     <div class="panel"><div class="panel-title">Need more help?</div>
-      <p style="font-size:12px;color:var(--text2)">Reach out to <strong style="color:var(--text)">support@reacrevenuesolutions.com</strong>, or use a Quick Link from the topbar dropdown if your admin has configured a Help Center.</p></div>
+      <p style="font-size:12px;color:var(--text2)">Reach out to your<strong style="color:var(--text)">Team Lead</strong>, or use a Quick Links from the topbar dropdown.</p></div>
   </div>`;
 }
 
