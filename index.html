@@ -1227,6 +1227,7 @@ function setupUserChip() {
 
 function pct(val){ if(val===null||val===undefined||val===''||val==='Attrite') return null; const n=parseFloat(String(val).replace('%','')); return isNaN(n)?null:n; }
 function fmtPct(val){ const n=pct(val); return n===null?'—':n.toFixed(2)+'%'; }
+function fmtAvg(n){ return (n===null||n===undefined||isNaN(n)) ? '—' : n.toFixed(2)+'%'; }
 function scoreBarHTML(val) {
   const n=pct(val); if (n===null) return '<span style="color:var(--text3)">—</span>';
   const cls=n>=90?'good':n>=75?'ok':n>=60?'warn':'danger';
@@ -1251,7 +1252,7 @@ function bandBarHTML(label, val) {
   const pos = n===null?0:Math.min(Math.max(n,0),100);
   return `<div class="band-row">
     <div class="band-row-head"><span class="band-row-label">${label}</span>
-      <span><span class="band-row-val" style="color:${info.color}">${n===null?'—':n.toFixed(1)+'%'}</span>
+      <span><span class="band-row-val" style="color:${info.color}">${n===null?'—':n.toFixed(2)+'%'}</span>
       <span class="band-tag" style="background:${info.color}22;color:${info.color}">${info.label}</span></span></div>
     <div class="band-track">
       <span class="band-seg" style="width:60%;background:var(--band-poor);opacity:.35"></span>
@@ -1423,7 +1424,7 @@ function renderPerformanceAgent() {
       <div class="panel-title">Overall Score & Trend</div>
       <div class="trend-panel">
         <div class="trend-left" style="--card-color:var(--neon)">
-          <div class="trend-big" style="--card-color:var(--neon)">${cur!==null?cur.toFixed(1)+'%':'—'}
+          <div class="trend-big" style="--card-color:var(--neon)">${cur!==null?cur.toFixed(2)+'%':'—'}
             ${delta!==null?`<span class="trend-pill ${delta>0?'up':delta<0?'down':'flat'}">${delta>0?'▲':delta<0?'▼':'—'} ${Math.abs(delta).toFixed(1)}%</span>`:''}</div>
           <div class="trend-caption">${latest?latest.label:'No active period'} overall performance${prev?' vs '+prev.label:''}</div>
         </div>
@@ -1476,7 +1477,7 @@ function renderPerformanceManager(tlFilter, accent, scopeLabel) {
       <div class="panel-title" style="color:${accent}">Average Overall Score & Trend</div>
       <div class="trend-panel">
         <div class="trend-left" style="--card-color:${accent}">
-          <div class="trend-big" style="--card-color:${accent}">${avgOv!==null?avgOv.toFixed(1)+'%':'—'}
+          <div class="trend-big" style="--card-color:${accent}">${avgOv!==null?avgOv.toFixed(2)+'%':'—'}
             ${delta!==null?`<span class="trend-pill ${delta>0?'up':delta<0?'down':'flat'}">${delta>0?'▲':delta<0?'▼':'—'} ${Math.abs(delta).toFixed(1)}%</span>`:''}</div>
           <div class="trend-caption">${latestLabel||'No active period'} · ${active.length} active agents</div>
         </div>
@@ -1635,10 +1636,10 @@ function renderAdminOverview() {
     </div>
     <div class="metrics-grid-5">
       <div class="metric-card" style="--card-color:var(--purple)"><div class="metric-label">Total Agents</div><div class="metric-value">${allAgents.length}</div><div class="metric-sub">${active.length} active · ${selLabel}</div></div>
-      <div class="metric-card" style="--card-color:#378ADD"><div class="metric-label">Avg TPS</div><div class="metric-value">${avgTps?avgTps.toFixed(1)+'%':'—'}</div><div class="metric-sub">${selLabel}</div></div>
-      <div class="metric-card" style="--card-color:var(--neon2)"><div class="metric-label">Avg Attendance</div><div class="metric-value">${avgAtt?avgAtt.toFixed(1)+'%':'—'}</div><div class="metric-sub">${selLabel}</div></div>
-      <div class="metric-card" style="--card-color:var(--warn)"><div class="metric-label">Avg QA Score</div><div class="metric-value">${avgQa?avgQa.toFixed(1)+'%':'—'}</div><div class="metric-sub">${selLabel}</div></div>
-      <div class="metric-card" style="--card-color:var(--neon)"><div class="metric-label">Avg Overall</div><div class="metric-value">${avgOv?avgOv.toFixed(1)+'%':'—'}</div><div class="metric-sub">${selLabel}</div></div>
+      <div class="metric-card" style="--card-color:#378ADD"><div class="metric-label">Avg TPS</div><div class="metric-value">${fmtAvg(avgTps)}</div><div class="metric-sub">${selLabel}</div></div>
+      <div class="metric-card" style="--card-color:var(--neon2)"><div class="metric-label">Avg Attendance</div><div class="metric-value">${fmtAvg(avgAtt)}</div><div class="metric-sub">${selLabel}</div></div>
+      <div class="metric-card" style="--card-color:var(--warn)"><div class="metric-label">Avg QA Score</div><div class="metric-value">${fmtAvg(avgQa)}</div><div class="metric-sub">${selLabel}</div></div>
+      <div class="metric-card" style="--card-color:var(--neon)"><div class="metric-label">Avg Overall</div><div class="metric-value">${fmtAvg(avgOv)}</div><div class="metric-sub">${selLabel}</div></div>
     </div>
     ${leads.length?`<div class="panel" style="margin-bottom:1.5rem"><div class="panel-title-row"><div class="panel-title" style="color:var(--purple)">Team Breakdown</div>
       <select class="select-ctrl" id="admin-breakdown-month-sel" onchange="adminBreakdownSwitch(this.value)">${allMonths.map((m,i)=>`<option value="${i}"${i===adminBreakdownMonthIdx?' selected':''}>${m.label}</option>`).join('')}</select></div>
