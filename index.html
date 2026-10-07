@@ -1760,10 +1760,10 @@ function renderTlOverview() {
     </div>
     <div class="metrics-grid-5">
       <div class="metric-card" style="--card-color:#378ADD"><div class="metric-label">Team Members</div><div class="metric-value">${myTeam.length}</div><div class="metric-sub">${active.length} active · ${selLabel}</div></div>
-      <div class="metric-card" style="--card-color:#378ADD"><div class="metric-label">Avg TPS</div><div class="metric-value">${avgTps?avgTps.toFixed(1)+'%':'—'}</div><div class="metric-sub">${selLabel}</div></div>
-      <div class="metric-card" style="--card-color:var(--purple)"><div class="metric-label">Avg Attendance</div><div class="metric-value">${avgAtt?avgAtt.toFixed(1)+'%':'—'}</div><div class="metric-sub">${selLabel}</div></div>
-      <div class="metric-card" style="--card-color:var(--warn)"><div class="metric-label">Avg QA Score</div><div class="metric-value">${avgQa?avgQa.toFixed(1)+'%':'—'}</div><div class="metric-sub">${selLabel}</div></div>
-      <div class="metric-card" style="--card-color:var(--neon)"><div class="metric-label">Avg Overall</div><div class="metric-value">${avgOv?avgOv.toFixed(1)+'%':'—'}</div><div class="metric-sub">${selLabel}</div></div>
+      <div class="metric-card" style="--card-color:#378ADD"><div class="metric-label">Avg TPS</div><div class="metric-value">${avgTps?avgTps.toFixed(2)+'%':'—'}</div><div class="metric-sub">${selLabel}</div></div>
+      <div class="metric-card" style="--card-color:var(--purple)"><div class="metric-label">Avg Attendance</div><div class="metric-value">${avgAtt?avgAtt.toFixed(2)+'%':'—'}</div><div class="metric-sub">${selLabel}</div></div>
+      <div class="metric-card" style="--card-color:var(--warn)"><div class="metric-label">Avg QA Score</div><div class="metric-value">${avgQa?avgQa.toFixed(2)+'%':'—'}</div><div class="metric-sub">${selLabel}</div></div>
+      <div class="metric-card" style="--card-color:var(--neon)"><div class="metric-label">Avg Overall</div><div class="metric-value">${avgOv?avgOv.toFixed(2)+'%':'—'}</div><div class="metric-sub">${selLabel}</div></div>
     </div>
     <div class="panel" style="margin-bottom:1.5rem"><div class="panel-title" style="color:#378ADD">Team Rankings — ${selLabel}</div><div style="overflow-x:auto"><table class="data-table">
       <thead><tr><th>Rank</th><th>Agent</th><th>TPS</th><th>Attendance</th><th>QA</th><th>Overall</th></tr></thead><tbody>
